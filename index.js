@@ -33,25 +33,43 @@ var currentData = {
     trade_status: "",
 }
 let trades = [
-   {
-       "token_name": "Act I The AI Prophecy",
-       "recommendation": "BUY",
-       "output_token": "So11111111111111111111111111111111111111112",
-       "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-       "slippage": 50,
-       "priority_fee": 5,
-       "route": {
-           "swapInfo": {
-               "inputMint": "So11111111111111111111111111111111111111112",
-               "outputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-               "inAmount": 54635850,
-               "outAmount": 0,
-               "feeAmount": 50
-           },
-           "percent": 100
-       },
-       "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv"
-   }
+    // {
+    //     "token_name": "Act I The AI Prophecy",
+    //     "recommendation": "SELL",
+    //     "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //     "output_token": "So11111111111111111111111111111111111111112",
+    //     "slippage": 50,
+    //     "priority_fee": 5,
+    //     "route": {
+    //         "swapInfo": {
+    //             "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //             "outputMint": "So11111111111111111111111111111111111111112",
+    //             "inAmount": 54635850,
+    //             "outAmount": 0,
+    //             "feeAmount": 50
+    //         },
+    //         "percent": 100
+    //     },
+    //     "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv"
+    // },{
+    //     "token_name": "Act I The AI Prophecy",
+    //     "recommendation": "BUY",
+    //     "input_token": "So11111111111111111111111111111111111111112",
+    //     "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //     "slippage": 50,
+    //     "priority_fee": 50,
+    //     "route": {
+    //         "swapInfo": {
+    //             "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //             "outputMint": "So11111111111111111111111111111111111111112",
+    //             "inAmount": 54635850,
+    //             "outAmount": 0,
+    //             "feeAmount": 50
+    //         },
+    //         "percent": 100
+    //     },
+    //     "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv"
+    // }
 ]
 
 const connectToDatabase = async() => {
@@ -135,55 +153,56 @@ const excuteSwap = async(quoteRes, fee) => {
 
 const run = async() =>{
 
-    // await connectToDatabase();
+    await connectToDatabase();
 
-    setInterval(() => {
-        axios.get(`${process.env.URL}`, {})
-        .then(function (response) {
-            let hereTrades = response.data.trades;
-            hereTrades.forEach(trade => {
-                if(trade.recommendation !== "HOLD"){
-                    trades.push(trade);
-                    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                    console.log(trades);
-                    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                }
-            });
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-    }, 2*60*1000);
+    // setInterval(() => {
+    //     axios.get(`${process.env.URL}`, {})
+    //     .then(function (response) {
+    //         let hereTrades = response.data.trades;
+    //         hereTrades.forEach(trade => {
+    //             if(trade.recommendation !== "HOLD"){
+    //                 trades.push(trade);
+    //             }
+    //         });
+    //         console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++");
+    //         console.log(trades);
+    //         console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+    //     })
+    //     .catch(function (error) {
+    //         console.log(error);
+    //     });
+    // }, 1000);
 
-    setInterval(async() => {
-        if(isProcessing === true || trades.length === 0) return;
+    // setInterval(async() => {
+    //     if(isProcessing === true || trades.length === 0) return;
         
-        currentData.token_id = trades[0].token_name;
-        currentData.input_mint = trades[0].input_token;
-        currentData.output_mint = trades[0].output_token;
-        currentData.action = trades[0].recommendation;
-        currentData.fees = trades[0].priority_fee;
+    //     currentData.token_id = trades[0].token_name;
+    //     currentData.input_mint = trades[0].input_token;
+    //     currentData.output_mint = trades[0].output_token;
+    //     currentData.action = trades[0].recommendation;
+    //     currentData.fees = trades[0].priority_fee;
         
-        const quoteRequest = {
-            // Fill with the necessary request parameters
-            inputMint: currentData.input_mint, // Example SOL mint address
-            outputMint: currentData.output_mint, // Example USDC mint address
-            amount: trades[0].route.swapInfo.inAmount,  // Amount (in lamports or appropriate unit)
-            slippage: trades[0].slippage,      // Slippage percentage
-        };
-        let quote = await getQuote(quoteRequest);
+    //     const quoteRequest = {
+    //         // Fill with the necessary request parameters
+    //         inputMint: currentData.input_mint, // Example SOL mint address
+    //         outputMint: currentData.output_mint, // Example USDC mint address
+    //         amount: trades[0].route.swapInfo.inAmount,  // Amount (in lamports or appropriate unit)
+    //         slippage: trades[0].slippage,      // Slippage percentage
+    //     };
+    //     // console.log(quoteRequest);
+    //     let quote = await getQuote(quoteRequest);
 
-        if(currentData.action === "BUY") {
-            currentData.quantity = quote.inAmount;
-            currentData.price = quote.outAmount;
-        } else {
-            currentData.quantity = quote.outAmount;
-            currentData.price = quote.inAmount;
-        }
-        trades.shift();
-        console.log(currentData);
-        await excuteSwap(quote, currentData.fees);
-    }, 6000);
+    //     if(currentData.action === "BUY") {
+    //         currentData.quantity = quote.inAmount;
+    //         currentData.price = quote.outAmount;
+    //     } else {
+    //         currentData.quantity = quote.outAmount;
+    //         currentData.price = quote.inAmount;
+    //     }
+    //     trades.shift();
+    //     console.log(currentData);
+    //     await excuteSwap(quote, currentData.fees);
+    // }, 6000);
 }
 
 run();
