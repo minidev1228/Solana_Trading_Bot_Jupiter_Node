@@ -35,25 +35,6 @@ var currentData = {
 let trades = [
     {
         "token_name": "Act I The AI Prophecy",
-        "recommendation": "BUY",
-        "input_token": "So11111111111111111111111111111111111111112",
-        "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-        "slippage": 50,
-        "priority_fee": 5,
-        "route": {
-            "swapInfo": {
-                "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-                "outputMint": "So11111111111111111111111111111111111111112",
-                "inAmount": 5463585,
-                "outAmount": 0,
-                "feeAmount": 50
-            },
-            "percent": 100
-        },
-        "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-        "inAmount": 5463585
-    },{
-        "token_name": "Act I The AI Prophecy",
         "recommendation": "SELL",
         "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
         "output_token": "So11111111111111111111111111111111111111112",
@@ -70,7 +51,27 @@ let trades = [
             "percent": 100
         },
         "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-        "inAmount": 5463585
+        "inAmount": 546358
+    },
+    {
+        "token_name": "Act I The AI Prophecy",
+        "recommendation": "BUY",
+        "input_token": "So11111111111111111111111111111111111111112",
+        "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+        "slippage": 50,
+        "priority_fee": 20,
+        "route": {
+            "swapInfo": {
+                "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+                "outputMint": "So11111111111111111111111111111111111111112",
+                "inAmount": 5463585,
+                "outAmount": 0,
+                "feeAmount": 50
+            },
+            "percent": 100
+        },
+        "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
+        "inAmount": 546358
     }
 ]
 
@@ -112,41 +113,41 @@ const getQuote = async(quoteRequest) => {
 }
 
 const excuteSwap = async(quoteRes, fee) => {
-        axios.post('https://quote-api.jup.ag/v6/swap',{
-            userPublicKey: publicKey,
-            wrapAndUnwrapSol: true,
-            useSharedAccounts: true,
-            prioritizationFeeLamports: fee,
-            quoteResponse: quoteRes
-        }).then(async(res)=>{
-            try {
-                const swapTransaction = res.data.swapTransaction;
-                const decodedTransaction = Buffer.from(swapTransaction, 'base64');
-                const transaction = VersionedTransaction.deserialize(decodedTransaction);
-                transaction.feePayer = publicKey;
-                const { blockhash } = await connection.getLatestBlockhash();
-                transaction.recentBlockhash = blockhash;
-                transaction.sign([wallet]);
-                const txid = await sendAndConfirmTransaction(connection, transaction,{
-                    commitment: 'confirmed',
-                    timeout: 60000, // 600 seconds
-                });
-                console.log("Current Transaction Id : ", txid);
-                currentData.txId = txid;
-                currentData.trade_status = "confirmed"
-                saveData();
-                return txid;
-            } catch (error) {
-                let message = error.message;
-                let arr = message.split(" ");
-                let txId = arr[17];
-                console.log(message);
-                currentData.txId = txId;
-                currentData.trade_status = "failed";
-                saveData();
-                return "failed";
-            }
-        })
+    axios.post('https://quote-api.jup.ag/v6/swap',{
+        userPublicKey: publicKey,
+        wrapAndUnwrapSol: true,
+        useSharedAccounts: true,
+        prioritizationFeeLamports: fee,
+        quoteResponse: quoteRes
+    }).then(async(res)=>{
+        try {
+            const swapTransaction = res.data.swapTransaction;
+            const decodedTransaction = Buffer.from(swapTransaction, 'base64');
+            const transaction = VersionedTransaction.deserialize(decodedTransaction);
+            transaction.feePayer = publicKey;
+            const { blockhash } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.sign([wallet]);
+            const txid = await sendAndConfirmTransaction(connection, transaction,{
+                commitment: 'confirmed',
+                timeout: 120000, // 600 seconds
+            });
+            console.log("Current Transaction Id : ", txid);
+            currentData.txId = txid;
+            currentData.trade_status = "confirmed"
+            saveData();
+            return txid;
+        } catch (error) {
+            let message = error.message;
+            let arr = message.split(" ");
+            let txId = arr[17];
+            console.log(message);
+            currentData.txId = txId;
+            currentData.trade_status = "failed";
+            saveData();
+            return "failed";
+        }
+    })
 }
 
 const run = async() =>{
@@ -181,6 +182,8 @@ const run = async() =>{
         currentData.output_mint = trades[0].output_token;
         currentData.action = trades[0].recommendation;
         currentData.fees = trades[0].priority_fee;
+        currentData.txId = "";
+        currentData.trade_status = "";
         
         const quoteRequest = {
             // Fill with the necessary request parameters
