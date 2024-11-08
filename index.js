@@ -12,7 +12,8 @@ const bs58 = require('bs58');
 
 require('dotenv').config();
 // Constant values
-const decodedSecretKey = Uint8Array.from(JSON.parse(process.env.SECRET_KEY));
+const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
+const decodedSecretKey = Uint8Array.from(JSON.parse(privateKey));
 const wallet = Keypair.fromSecretKey(decodedSecretKey);
 const publicKey = wallet.publicKey.toBase58();
 const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed'); // Change to mainnet or other environments as necessary
@@ -33,46 +34,45 @@ var currentData = {
     trade_status: "",
 }
 let trades = [
-    // {
-    //     "token_name": "Act I The AI Prophecy",
-    //     "recommendation": "BUY",
-    //     "input_token": "So11111111111111111111111111111111111111112",
-    //     "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-    //     "slippage": 50,
-    //     "priority_fee": 20,
-    //     "route": {
-    //         "swapInfo": {
-    //             "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-    //             "outputMint": "So11111111111111111111111111111111111111112",
-    //             "inAmount": 5463585,
-    //             "outAmount": 0,
-    //             "feeAmount": 50
-    //         },
-    //         "percent": 100
-    //     },
-    //     "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-    //     "inAmount": 546358
-    // },
-    // {
-    //     "token_name": "Act I The AI Prophecy",
-    //     "recommendation": "SELL",
-    //     "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-    //     "output_token": "So11111111111111111111111111111111111111112",
-    //     "slippage": 50,
-    //     "priority_fee": 5,
-    //     "route": {
-    //         "swapInfo": {
-    //             "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-    //             "outputMint": "So11111111111111111111111111111111111111112",
-    //             "inAmount": 5463585,
-    //             "outAmount": 0,
-    //             "feeAmount": 50
-    //         },
-    //         "percent": 100
-    //     },
-    //     "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-    //     "inAmount": 546358
-    // }
+    {
+        "token_name": "Act I The AI Prophecy",
+        "recommendation": "BUY",
+        "input_token": "So11111111111111111111111111111111111111112",
+        "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+        "slippage": 50,
+        "priority_fee": 20,
+        "route": {
+            "swapInfo": {
+                "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+                "outputMint": "So11111111111111111111111111111111111111112",
+                "inAmount": 5463585,
+                "outAmount": 0,
+                "feeAmount": 50
+            },
+            "percent": 100
+        },
+        "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
+        "inAmount": 546358
+    },{
+        "token_name": "Act I The AI Prophecy",
+        "recommendation": "SELL",
+        "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+        "output_token": "So11111111111111111111111111111111111111112",
+        "slippage": 50,
+        "priority_fee": 5,
+        "route": {
+            "swapInfo": {
+                "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+                "outputMint": "So11111111111111111111111111111111111111112",
+                "inAmount": 5463585,
+                "outAmount": 0,
+                "feeAmount": 50
+            },
+            "percent": 100
+        },
+        "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
+        "inAmount": 546358
+    }
 ]
 
 const connectToDatabase = async() => {
@@ -125,9 +125,7 @@ const confirmTransaction = async (
         const stat = await connection.getSignatureStatuses([signature], { searchTransactionHistory });
 
         const statuses = stat.value;
-
-        console.log(statuses);
-
+        
         if (!statuses || statuses.length === 0) {
             // throw new Error('Failed to get signature status');
             return {err: "failed"};
