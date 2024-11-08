@@ -33,46 +33,46 @@ var currentData = {
     trade_status: "",
 }
 let trades = [
-    {
-        "token_name": "Act I The AI Prophecy",
-        "recommendation": "SELL",
-        "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-        "output_token": "So11111111111111111111111111111111111111112",
-        "slippage": 50,
-        "priority_fee": 5,
-        "route": {
-            "swapInfo": {
-                "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-                "outputMint": "So11111111111111111111111111111111111111112",
-                "inAmount": 5463585,
-                "outAmount": 0,
-                "feeAmount": 50
-            },
-            "percent": 100
-        },
-        "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-        "inAmount": 546358
-    },
-    {
-        "token_name": "Act I The AI Prophecy",
-        "recommendation": "BUY",
-        "input_token": "So11111111111111111111111111111111111111112",
-        "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-        "slippage": 50,
-        "priority_fee": 20,
-        "route": {
-            "swapInfo": {
-                "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
-                "outputMint": "So11111111111111111111111111111111111111112",
-                "inAmount": 5463585,
-                "outAmount": 0,
-                "feeAmount": 50
-            },
-            "percent": 100
-        },
-        "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-        "inAmount": 546358
-    }
+    // {
+    //     "token_name": "Act I The AI Prophecy",
+    //     "recommendation": "BUY",
+    //     "input_token": "So11111111111111111111111111111111111111112",
+    //     "output_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //     "slippage": 50,
+    //     "priority_fee": 20,
+    //     "route": {
+    //         "swapInfo": {
+    //             "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //             "outputMint": "So11111111111111111111111111111111111111112",
+    //             "inAmount": 5463585,
+    //             "outAmount": 0,
+    //             "feeAmount": 50
+    //         },
+    //         "percent": 100
+    //     },
+    //     "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
+    //     "inAmount": 546358
+    // },
+    // {
+    //     "token_name": "Act I The AI Prophecy",
+    //     "recommendation": "SELL",
+    //     "input_token": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //     "output_token": "So11111111111111111111111111111111111111112",
+    //     "slippage": 50,
+    //     "priority_fee": 5,
+    //     "route": {
+    //         "swapInfo": {
+    //             "inputMint": "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    //             "outputMint": "So11111111111111111111111111111111111111112",
+    //             "inAmount": 5463585,
+    //             "outAmount": 0,
+    //             "feeAmount": 50
+    //         },
+    //         "percent": 100
+    //     },
+    //     "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
+    //     "inAmount": 546358
+    // }
 ]
 
 const connectToDatabase = async() => {
@@ -112,6 +112,56 @@ const getQuote = async(quoteRequest) => {
     }
 }
 
+const confirmTransaction = async (
+    signature,
+    desiredConfirmationStatus = 'confirmed',
+    timeout = 60000,
+    pollInterval = 1000,
+    searchTransactionHistory = false
+) => {
+    const start = Date.now();
+
+    while (Date.now() - start < timeout) {
+        const stat = await connection.getSignatureStatuses([signature], { searchTransactionHistory });
+
+        const statuses = stat.value;
+
+        console.log(statuses);
+
+        if (!statuses || statuses.length === 0) {
+            // throw new Error('Failed to get signature status');
+            return {err: "failed"};
+        }
+
+        const status = statuses[0];
+
+        console.log(stat);
+
+        if (status === null) {
+            await new Promise(resolve => setTimeout(resolve, pollInterval));
+            continue;
+        }
+
+        if (status.err) {
+            // throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+            return {err: "failed"};
+        }
+
+        if (status.confirmationStatus && status.confirmationStatus === desiredConfirmationStatus) {
+            return status;
+        }
+
+        if (status.confirmationStatus === 'finalized') {
+            return status;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+
+    return {err:"timeout"};
+    // throw new Error(`Transaction confirmation timeout after ${timeout}ms`);
+};
+
 const excuteSwap = async(quoteRes, fee) => {
     axios.post('https://quote-api.jup.ag/v6/swap',{
         userPublicKey: publicKey,
@@ -128,24 +178,47 @@ const excuteSwap = async(quoteRes, fee) => {
             const { blockhash } = await connection.getLatestBlockhash();
             transaction.recentBlockhash = blockhash;
             transaction.sign([wallet]);
-            const txid = await sendAndConfirmTransaction(connection, transaction,{
-                commitment: 'confirmed',
-                timeout: 120000, // 600 seconds
-            });
-            console.log("Current Transaction Id : ", txid);
+
+            // const rawTransaction = transaction.serialize();
+            // const txid = await connection.sendRawTransaction(rawTransaction, {
+            //     skipPreflight: true,
+            //     maxRetries: 5
+            // });
+
+            // console.log(txid);
+
+            // if (confirmation.err) {
+            //     throw new Error('Transaction failed');
+            // }
+            
+            const txid = await sendAndConfirmTransaction(connection, transaction);
+            // console.log("Current Transaction Id : ", txid);
             currentData.txId = txid;
             currentData.trade_status = "confirmed"
+            
             saveData();
+            
             return txid;
         } catch (error) {
             let message = error.message;
+            console.log(message);
             let arr = message.split(" ");
             let txId = arr[17];
-            console.log(message);
-            currentData.txId = txId;
-            currentData.trade_status = "failed";
-            saveData();
-            return "failed";
+
+            if(txId[0]==="p" && txId[1]==="r" && txId[2]==="o" && txId[3]==="g" ){
+                currentData.txId = "Not enough balance"
+                currentData.trade_status = "failed";
+                saveData();
+            } else{
+                currentData.txId = txId;
+                const confirmation = await confirmTransaction(txId);
+                if (confirmation.err) {
+                    currentData.trade_status = "failed";            
+                } else {
+                    currentData.trade_status = "confirmed";
+                }
+                saveData()
+            }
         }
     })
 }
