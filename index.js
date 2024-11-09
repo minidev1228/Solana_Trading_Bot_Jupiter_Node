@@ -34,6 +34,17 @@ var currentData = {
     trade_status: "",
 }
 let trades = [
+    // {
+    //     token_name: 'Gigachad',
+    //     slippage: 50,
+    //     priority_fee: 5,
+    //     userPublicKey: 'FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv',
+    //     route: { swapInfo: [Object], percent: 100 },
+    //     recommendation: 'BUY',
+    //     input_token: 'So11111111111111111111111111111111111111112',
+    //     output_token: '63LfDmNb3MQ8mw9MtZ2To9bEA2M71kZUUGq5tiJxcqj9',
+    //     inAmount: 24869435
+    // }
     {
         "token_name": "Act I The AI Prophecy",
         "recommendation": "BUY",
@@ -52,7 +63,7 @@ let trades = [
             "percent": 100
         },
         "userPublicKey": "FLN3VVpcMmc3uSbyzBJ59LqSF2XegkaEFxS7hnr1FJKv",
-        "inAmount": 546358
+        "inAmount": 5468
     },{
         "token_name": "Act I The AI Prophecy",
         "recommendation": "SELL",
@@ -125,7 +136,7 @@ const confirmTransaction = async (
         const stat = await connection.getSignatureStatuses([signature], { searchTransactionHistory });
 
         const statuses = stat.value;
-        
+
         if (!statuses || statuses.length === 0) {
             // throw new Error('Failed to get signature status');
             return {err: "failed"};
